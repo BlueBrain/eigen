@@ -90,6 +90,14 @@ struct CacheSizes {
   std::ptrdiff_t m_l3;
 };
 
+#ifdef _OPENMP
+#pragma omp declare target
+#endif
+CacheSizes m_cacheSizes;
+#ifdef _OPENMP
+#pragma omp end declare target
+#endif
+
 /** \internal */
 EIGEN_DEVICE_FUNC
 inline void manage_caching_sizes(Action action, std::ptrdiff_t* l1, std::ptrdiff_t* l2, std::ptrdiff_t* l3)
@@ -118,7 +126,6 @@ inline void manage_caching_sizes(Action action, std::ptrdiff_t* l1, std::ptrdiff
     eigen_internal_assert(false);
   }
   #else // EIGEN_CUDA_ARCH
-  static CacheSizes m_cacheSizes;
 
   if(action==SetAction)
   {

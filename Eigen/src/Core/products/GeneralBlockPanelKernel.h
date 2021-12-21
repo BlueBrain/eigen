@@ -90,6 +90,21 @@ struct CacheSizes {
   std::ptrdiff_t m_l3;
 };
 
+// In C++17 this could be an inline variable, see for example
+// https://stackoverflow.com/questions/38043442/how-do-inline-variables-work
+template <typename>
+struct CacheSizeGlobalHelper {
+  static CacheSizes s_cacheSizes;
+};
+#ifdef _OPENMP
+#pragma omp declare target
+#endif
+template <typename T>
+CacheSizes CacheSizeGlobalHelper<T>::s_cacheSizes;
+#ifdef _OPENMP
+#pragma omp end declare target
+#endif
+
 /** \internal */
 EIGEN_DEVICE_FUNC
 inline void manage_caching_sizes(Action action, std::ptrdiff_t* l1, std::ptrdiff_t* l2, std::ptrdiff_t* l3)
@@ -118,22 +133,22 @@ inline void manage_caching_sizes(Action action, std::ptrdiff_t* l1, std::ptrdiff
     eigen_internal_assert(false);
   }
   #else // EIGEN_CUDA_ARCH
-  static CacheSizes m_cacheSizes;
 
+  auto& cacheSizes = CacheSizeGlobalHelper<void>::s_cacheSizes;
   if(action==SetAction)
   {
     // set the cpu cache size and cache all block sizes from a global cache size in byte
     eigen_internal_assert(l1!=0 && l2!=0);
-    m_cacheSizes.m_l1 = *l1;
-    m_cacheSizes.m_l2 = *l2;
-    m_cacheSizes.m_l3 = *l3;
+    cacheSizes.m_l1 = *l1;
+    cacheSizes.m_l2 = *l2;
+    cacheSizes.m_l3 = *l3;
   }
   else if(action==GetAction)
   {
     eigen_internal_assert(l1!=0 && l2!=0);
-    *l1 = m_cacheSizes.m_l1;
-    *l2 = m_cacheSizes.m_l2;
-    *l3 = m_cacheSizes.m_l3;
+    *l1 = cacheSizes.m_l1;
+    *l2 = cacheSizes.m_l2;
+    *l3 = cacheSizes.m_l3;
   }
   else
   {

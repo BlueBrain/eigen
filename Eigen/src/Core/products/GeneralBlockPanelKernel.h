@@ -94,10 +94,10 @@ struct CacheSizes {
 EIGEN_DEVICE_FUNC
 inline void manage_caching_sizes(Action action, std::ptrdiff_t* l1, std::ptrdiff_t* l2, std::ptrdiff_t* l3)
 {
-  #if defined(EIGEN_CUDA_ARCH) || defined(_OPENMP)
+  #if defined(EIGEN_CUDA_ARCH) || (defined(__NVCOMPILER) && defined(_OPENMP))
   if (action==GetAction)
   {
-    #if EIGEN_CUDA_ARCH >= 700 || defined(_OPENMP)
+    #if EIGEN_CUDA_ARCH >= 700 || (defined(__NVCOMPILER) && defined(_OPENMP))
     // Volta, Turing, or newer
     //   - the L1 cache is configurable at runtime, with a minimum of 32 KB/SM
     //   - the L2 cache depends on the actual card, with a minimum of 64 KB/SM
